@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackevents"
@@ -67,55 +66,17 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("mention event: ", ev)
 			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("hello", false))
 		case *slackevents.MessageEvent:
-			regex := regexp.MustCompile("^!move (.*)$")
-			matches := regex.FindStringSubmatch(ev.Text)
-
-			if ev.Text == "!start" {
-				_, err := s.GameStorage.RetrieveGame()
-				if err == nil {
-					s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("there is already a game in place", false))
-					return
-				}
-
-				players := []game.Player{
-					{ID: "bot"},
-					{ID: "alp"},
-				}
-
-				gm := game.NewGame("1234", players...)
-				s.GameStorage.StoreGame(gm)
-
-				humanColor, err := gm.GetColor("alp")
-				msg := fmt.Sprintf("Human is %s", humanColor)
-				s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText(msg, false))
-			}
-
 			if ev.Text == "!exit" {
 				s.GameStorage.RemoveGame()
 				return
 			}
 
-			gm, err := s.GameStorage.RetrieveGame()
-
-			if err != nil {
-				fmt.Println(err)
+			msg := parseMessage(ev)
+			if msg == nil {
 				return
 			}
 
-			if len(matches) > 0 && gm.TurnPlayer().ID == "alp" {
-				playerMove := matches[1]
-				fmt.Println(playerMove)
-
-				err := gm.Vote(playerMove)
-
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-
-				fmt.Println(gm.Votes())
-
-			}
+			msg.Handle(&s)
 
 			//fmt.Println("message event", ev)
 		}

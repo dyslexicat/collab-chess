@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/notnil/chess"
@@ -39,6 +40,7 @@ type Game struct {
 	lastMoved    time.Time
 	checkedTile  *chess.Square
 	timeProvider TimeProvider
+	mu           sync.Mutex
 }
 
 // Player represents a human Chess player
@@ -100,7 +102,7 @@ func (g *Game) GetColor(ID string) (Color, error) {
 	return "", fmt.Errorf("this player does not exist in this game")
 }
 
-// Move a Chess piece based on standard algabreic notation (d2d4, etc)
+// Move a Chess piece based on standard algebraic notation (d2d4, etc)
 func (g *Game) Move(san string) (*chess.Move, error) {
 	err := g.game.MoveStr(san)
 	if err != nil {
@@ -188,6 +190,8 @@ func (g *Game) Votes() []string {
 
 // Vote votes on a move if it is a valid move
 func (g *Game) Vote(move string) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	// this returns an error if it is not a valid move
 	_, err := chess.AlgebraicNotation{}.Decode(g.game.Position(), move)
 
@@ -201,6 +205,8 @@ func (g *Game) Vote(move string) error {
 
 // MoveTopVote moves the top voted piece
 func (g *Game) MoveTopVote() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
 	freqs := make(map[string]int)
 	for _, move := range g.votes {
 		freqs[move]++

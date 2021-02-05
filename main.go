@@ -64,7 +64,7 @@ func main() {
 				continue
 			}
 
-			if gm.TurnPlayer().ID == "alp" {
+			if gm.TurnPlayer().ID != "bot" {
 				if time.Since(gm.LastMoveTime()) > 20*time.Second {
 					fmt.Println("current votes: ", gm.Votes())
 					err := gm.MoveTopVote()
