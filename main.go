@@ -3,6 +3,7 @@ package main
 import (
 	"chess-slack/game"
 	"chess-slack/handler"
+	"chess-slack/rendering"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,6 +15,11 @@ import (
 	"github.com/notnil/chess"
 )
 
+var colorToHex = map[game.Color]string{
+	game.Black: "#000000",
+	game.White: "#eeeeee",
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -23,6 +29,7 @@ func main() {
 	// slack api bot token (xobx...)
 	slackAuthToken := os.Getenv("SLACK_BOT_TOKEN")
 	signingSecret := os.Getenv("SLACK_SIGNING_SECRET")
+	hostname := os.Getenv("TEST_HOSTNAME")
 
 	var gameStorage game.ChessStorage
 	api := slack.New(slackAuthToken)
@@ -30,13 +37,23 @@ func main() {
 	memoryStore := game.NewMemoryStore()
 	gameStorage = memoryStore
 
+	renderLink := rendering.NewRenderLink(hostname, signingSecret)
+
 	sHandler := handler.SlackHandler{
-		SigningKey:  signingSecret,
-		BotToken:    slackAuthToken,
-		GameStorage: gameStorage,
+		SigningKey:   signingSecret,
+		BotToken:     slackAuthToken,
+		GameStorage:  gameStorage,
+		LinkRenderer: renderLink,
 	}
 
 	http.Handle("/slack/events", sHandler)
+
+	http.Handle("/board", rendering.BoardRenderHandler{
+		LinkRenderer: renderLink,
+	})
+	http.Handle("/board.png", rendering.BoardRenderHandler{
+		LinkRenderer: renderLink,
+	})
 
 	go func() {
 		for {
@@ -56,22 +73,37 @@ func main() {
 				time.Sleep(time.Second * 2)
 				botMove := gm.BotMove()
 				fmt.Println("bot played: ", botMove)
-				api.PostMessage("C01GNJRCQLD", slack.MsgOptionText("bot played", false))
+
+				link, _ := sHandler.LinkRenderer.CreateLink(gm)
+
+				boardAttachment := slack.Attachment{
+					Text:     botMove.String(),
+					ImageURL: link.String(),
+					Color:    colorToHex[gm.Turn()],
+				}
+
+				api.PostMessage("C01GNJRCQLD", slack.MsgOptionText("bot played", false), slack.MsgOptionAttachments(boardAttachment))
 				fmt.Println(gm)
 			}
 
-			if len(gm.Votes()) == 0 {
-				continue
-			}
-
 			if gm.TurnPlayer().ID != "bot" {
+				if gm.Started() && time.Since(gm.LastMoveTime()) > 30*time.Second {
+					fmt.Println(gm.Started())
+					fmt.Println("removing the current game from pool")
+					sHandler.GameStorage.RemoveGame()
+					g, _ := sHandler.GameStorage.RetrieveGame()
+					fmt.Println(g)
+				}
+
 				if time.Since(gm.LastMoveTime()) > 20*time.Second {
-					fmt.Println("current votes: ", gm.Votes())
-					err := gm.MoveTopVote()
+					_, err := gm.MoveTopVote()
 					if err != nil {
-						fmt.Println(err)
+						continue
 					}
-					api.PostMessage("C01GNJRCQLD", slack.MsgOptionText("human moved", false))
+
+					fmt.Println("current votes: ", gm.Votes())
+
+					//api.PostMessage("C01GNJRCQLD", slack.MsgOptionText(, false))
 					fmt.Println(gm)
 				}
 			}

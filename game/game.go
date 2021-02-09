@@ -92,6 +92,11 @@ func (g *Game) Turn() Color {
 	}
 }
 
+// FEN serializer
+func (g *Game) FEN() string {
+	return g.game.FEN()
+}
+
 // GetColor returns the piece color for a given ID
 func (g *Game) GetColor(ID string) (Color, error) {
 	for key, val := range g.Players {
@@ -121,12 +126,6 @@ func (g *Game) BotMove() *chess.Move {
 	g.started = true
 	g.lastMoved = g.timeProvider()
 	return g.LastMove()
-}
-
-// TestMove plays a random move and sets the votes to zero
-func (g *Game) TestMove() *chess.Move {
-	g.votes = nil
-	return g.BotMove()
 }
 
 // Outcome determines the outcome of the game (or no outcome)
@@ -204,7 +203,7 @@ func (g *Game) Vote(move string) error {
 }
 
 // MoveTopVote moves the top voted piece
-func (g *Game) MoveTopVote() error {
+func (g *Game) MoveTopVote() (*chess.Move, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	freqs := make(map[string]int)
@@ -223,15 +222,27 @@ func (g *Game) MoveTopVote() error {
 	}
 
 	if topVoteCount == 0 {
-		return fmt.Errorf("there was no top vote")
+		return nil, fmt.Errorf("there was no top vote")
 	}
 
-	_, err := g.Move(topVote)
+	chessMove, err := g.Move(topVote)
 
 	if err != nil {
-		return fmt.Errorf("there was a problem playing the move %s", topVote)
+		return nil, fmt.Errorf("there was a problem playing the move %s", topVote)
 	}
 
 	g.votes = nil
-	return nil
+	return chessMove, nil
+}
+
+// CheckedKing returns the square of a checked king if there is indeed a king in check.
+func (g *Game) CheckedKing() chess.Square {
+	squareMap := g.game.Position().Board().SquareMap()
+	lastMovePiece := squareMap[g.LastMove().S2()]
+	for square, piece := range squareMap {
+		if piece.Type() == chess.King && piece.Color() == lastMovePiece.Color().Other() {
+			return square
+		}
+	}
+	return chess.NoSquare
 }

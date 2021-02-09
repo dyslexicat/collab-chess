@@ -2,6 +2,7 @@ package handler
 
 import (
 	"chess-slack/game"
+	"chess-slack/rendering"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,10 +14,11 @@ import (
 
 // SlackHandler handles Slack events
 type SlackHandler struct {
-	SigningKey  string
-	BotToken    string
-	SlackClient *slack.Client
-	GameStorage game.ChessStorage
+	SigningKey   string
+	BotToken     string
+	SlackClient  *slack.Client
+	GameStorage  game.ChessStorage
+	LinkRenderer rendering.RenderLink
 }
 
 func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
