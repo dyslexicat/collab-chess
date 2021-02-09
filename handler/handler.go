@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackevents"
+	"github.com/notnil/chess"
 )
 
 // SlackHandler handles Slack events
@@ -19,6 +21,11 @@ type SlackHandler struct {
 	SlackClient  *slack.Client
 	GameStorage  game.ChessStorage
 	LinkRenderer rendering.RenderLink
+}
+
+var colorToHex = map[game.Color]string{
+	game.Black: "#000000",
+	game.White: "#eeeeee",
 }
 
 func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +88,59 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			msg.Handle(&s)
 
 			//fmt.Println("message event", ev)
+		}
+	}
+}
+
+// GameLoop is the main loop where the game starts and checks for moves between players
+func (s SlackHandler) GameLoop() {
+	for {
+		gm, err := s.GameStorage.RetrieveGame()
+
+		if err != nil {
+			return
+		}
+
+		if outcome := gm.Outcome(); outcome != chess.NoOutcome {
+			s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText(gm.ResultText(), false))
+			s.GameStorage.RemoveGame()
+			return
+		}
+
+		if gm.TurnPlayer().ID == "bot" {
+			time.Sleep(time.Second * 2)
+			botMove := gm.BotMove()
+			fmt.Println("bot played: ", botMove)
+
+			link, _ := s.LinkRenderer.CreateLink(gm)
+
+			boardAttachment := slack.Attachment{
+				Text:     botMove.String(),
+				ImageURL: link.String(),
+				Color:    colorToHex[gm.Turn()],
+			}
+
+			s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("bot played", false), slack.MsgOptionAttachments(boardAttachment))
+			fmt.Println(gm)
+		}
+
+		if gm.TurnPlayer().ID != "bot" {
+			if time.Since(gm.LastMoveTime()) > 30*time.Second {
+				fmt.Println("removing the current game from pool")
+				s.GameStorage.RemoveGame()
+				g, _ := s.GameStorage.RetrieveGame()
+				fmt.Println(g)
+			}
+
+			if time.Since(gm.LastMoveTime()) > 20*time.Second {
+				_, err := gm.MoveTopVote()
+				if err != nil {
+					continue
+				}
+
+				//api.PostMessage("C01GNJRCQLD", slack.MsgOptionText(, false))
+				fmt.Println(gm)
+			}
 		}
 	}
 }

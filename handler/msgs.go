@@ -78,6 +78,8 @@ func (msg GameStartMsg) Handle(s *SlackHandler) {
 	gm := game.NewGame("1234", players...)
 	s.GameStorage.StoreGame(gm)
 
+	go s.GameLoop()
+
 	humanColor, err := gm.GetColor(msg.player)
 	text := fmt.Sprintf("Human is %s", humanColor)
 	s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText(text, false))
