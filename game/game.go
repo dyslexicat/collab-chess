@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
@@ -199,7 +200,12 @@ func (g *Game) Vote(playerID string, move string) error {
 		return fmt.Errorf("move is not valid")
 	}
 
-	g.votes[playerID] = move
+	_, ok := g.votes[playerID]
+	if !ok {
+		log.Println(playerID, " is making a move.")
+		g.votes[playerID] = move
+	}
+
 	return nil
 }
 
