@@ -121,13 +121,11 @@ func (g *Game) Move(san string) (*chess.Move, error) {
 }
 
 // BotMove simulates a move for our bot player
-func (g *Game) BotMove() *chess.Move {
-	moves := g.ValidMoves()
-	move := moves[rand.Intn(len(moves))]
-	g.game.Move(move)
+func (g *Game) BotMove(m *chess.Move) error {
+	err := g.game.Move(m)
 	g.started = true
 	g.lastMoved = g.timeProvider()
-	return g.LastMove()
+	return err
 }
 
 // Outcome determines the outcome of the game (or no outcome)
@@ -182,6 +180,11 @@ func (g *Game) ValidMoves() []*chess.Move {
 // Board representation as a string
 func (g *Game) String() string {
 	return g.game.Position().Board().Draw()
+}
+
+// Position returns the current position of the board for the engine move
+func (g *Game) Position() *chess.Position {
+	return g.game.Position()
 }
 
 // Votes returns the voted moves so far

@@ -12,6 +12,7 @@ import (
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackevents"
 	"github.com/notnil/chess"
+	"github.com/notnil/chess/uci"
 )
 
 // SlackHandler handles Slack events
@@ -94,6 +95,18 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // GameLoop is the main loop where the game starts and checks for moves between players
 func (s SlackHandler) GameLoop() {
+	// set up engine to use stockfish exe
+	eng, err := uci.New("stockfish")
+	if err != nil {
+		panic(err)
+	}
+
+	defer eng.Close()
+	// initialize uci with new game
+	if err := eng.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame); err != nil {
+		panic(err)
+	}
+
 	for {
 		gm, err := s.GameStorage.RetrieveGame()
 
@@ -109,13 +122,19 @@ func (s SlackHandler) GameLoop() {
 
 		if gm.TurnPlayer().ID == "bot" {
 			time.Sleep(time.Second * 2)
-			botMove := gm.BotMove()
-			fmt.Println("bot played: ", botMove)
+			cmdPos := uci.CmdPosition{Position: gm.Position()}
+			cmdGo := uci.CmdGo{MoveTime: time.Second / 100}
+			if err := eng.Run(cmdPos, cmdGo); err != nil {
+				panic(err)
+			}
+			move := eng.SearchResults().BestMove
+			if err := gm.BotMove(move); err != nil {
+				panic(err)
+			}
 
 			link, _ := s.LinkRenderer.CreateLink(gm)
 
 			boardAttachment := slack.Attachment{
-				Text:     botMove.String(),
 				ImageURL: link.String(),
 				Color:    colorToHex[gm.Turn()],
 			}
