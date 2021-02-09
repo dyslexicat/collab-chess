@@ -87,8 +87,7 @@ func main() {
 			}
 
 			if gm.TurnPlayer().ID != "bot" {
-				if gm.Started() && time.Since(gm.LastMoveTime()) > 30*time.Second {
-					fmt.Println(gm.Started())
+				if time.Since(gm.LastMoveTime()) > 30*time.Second {
 					fmt.Println("removing the current game from pool")
 					sHandler.GameStorage.RemoveGame()
 					g, _ := sHandler.GameStorage.RetrieveGame()
@@ -100,8 +99,6 @@ func main() {
 					if err != nil {
 						continue
 					}
-
-					fmt.Println("current votes: ", gm.Votes())
 
 					//api.PostMessage("C01GNJRCQLD", slack.MsgOptionText(, false))
 					fmt.Println(gm)

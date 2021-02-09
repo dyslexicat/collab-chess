@@ -140,14 +140,12 @@ func (msg MoveMsg) Handle(s *SlackHandler) {
 		return
 	}
 
-	moveErr := gm.Vote(msg.san)
+	moveErr := gm.Vote(msg.player, msg.san)
 
 	if moveErr != nil {
 		fmt.Println(moveErr)
 		return
 	}
-
-	fmt.Println(gm.Votes())
 }
 
 // This parses messages to either a msg to start the game or to play a move

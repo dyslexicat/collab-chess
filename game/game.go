@@ -36,7 +36,7 @@ type Game struct {
 	game         *chess.Game
 	started      bool
 	Players      map[Color]Player
-	votes        []string
+	votes        map[string]string
 	lastMoved    time.Time
 	checkedTile  *chess.Square
 	timeProvider TimeProvider
@@ -54,7 +54,8 @@ func NewGame(ID string, players ...Player) *Game {
 	gm := &Game{
 		ID:           ID,
 		game:         chess.NewGame(),
-		lastMoved:    time.Time{},
+		lastMoved:    time.Now(),
+		votes:        make(map[string]string),
 		timeProvider: defaultTimeProvider,
 	}
 	attachPlayers(gm, players...)
@@ -183,12 +184,12 @@ func (g *Game) String() string {
 }
 
 // Votes returns the voted moves so far
-func (g *Game) Votes() []string {
+func (g *Game) Votes() map[string]string {
 	return g.votes
 }
 
 // Vote votes on a move if it is a valid move
-func (g *Game) Vote(move string) error {
+func (g *Game) Vote(playerID string, move string) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	// this returns an error if it is not a valid move
@@ -198,7 +199,7 @@ func (g *Game) Vote(move string) error {
 		return fmt.Errorf("move is not valid")
 	}
 
-	g.votes = append(g.votes, move)
+	g.votes[playerID] = move
 	return nil
 }
 
@@ -231,7 +232,8 @@ func (g *Game) MoveTopVote() (*chess.Move, error) {
 		return nil, fmt.Errorf("there was a problem playing the move %s", topVote)
 	}
 
-	g.votes = nil
+	// reset votes after the voting
+	g.votes = map[string]string{}
 	return chessMove, nil
 }
 
