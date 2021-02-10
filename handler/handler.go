@@ -115,7 +115,7 @@ func (s SlackHandler) GameLoop() {
 				return
 			}
 
-			if gm.TurnPlayer().ID == "bot" {
+			if gm.TurnPlayer().ID == "chessbot" {
 				time.Sleep(time.Second * 2)
 				gm.Lock()
 				cmdPos := uci.CmdPosition{Position: gm.Position()}
@@ -139,7 +139,7 @@ func (s SlackHandler) GameLoop() {
 				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("I made my move :crossed_swords:", false), slack.MsgOptionAttachments(boardAttachment))
 			}
 
-			if gm.TurnPlayer().ID != "bot" {
+			if gm.TurnPlayer().ID != "chessbot" {
 				if time.Since(gm.LastMoveTime()) > time.Minute*2 {
 					log.Println("nobody made a move :( removing the current game from pool")
 					s.GameStorage.RemoveGame()

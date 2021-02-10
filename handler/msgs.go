@@ -71,7 +71,7 @@ func (msg GameStartMsg) Handle(s *SlackHandler) {
 	}
 
 	players := []game.Player{
-		{ID: "bot"},
+		{ID: "chessbot"},
 		{ID: msg.player},
 	}
 
@@ -81,7 +81,7 @@ func (msg GameStartMsg) Handle(s *SlackHandler) {
 	go s.GameLoop()
 
 	humanColor, err := gm.GetColor(msg.player)
-	text := fmt.Sprintf("Human is %s", humanColor)
+	text := fmt.Sprintf("Hackalackers are playing: %s", humanColor)
 	s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText(text, false))
 }
 
@@ -139,7 +139,7 @@ func (msg MoveMsg) Handle(s *SlackHandler) {
 	}
 
 	// if our mutex locks are properly working this should be redundant
-	if gm.TurnPlayer().ID == "bot" {
+	if gm.TurnPlayer().ID == "chessbot" {
 		return
 	}
 
