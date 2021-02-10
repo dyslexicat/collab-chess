@@ -112,10 +112,10 @@ func (s SlackHandler) GameLoop() {
 		panic(err)
 	}
 
-	for {
-		time.Sleep(time.Second)
-		func() {
-			fmt.Println("a second passed inside game loop")
+	func() {
+		for {
+			time.Sleep(time.Second)
+
 			gm, err := s.GameStorage.RetrieveGame()
 
 			if err != nil {
@@ -165,6 +165,6 @@ func (s SlackHandler) GameLoop() {
 					fmt.Println(move)
 				}
 			}
-		}()
-	}
+		}
+	}()
 }
