@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"chess-slack/game"
+	"collab-chess/game"
 	"fmt"
 	"log"
 	"regexp"

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"chess-slack/game"
-	"chess-slack/rendering"
+	"collab-chess/game"
+	"collab-chess/rendering"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -140,7 +140,7 @@ func (s SlackHandler) GameLoop() {
 			}
 
 			if gm.TurnPlayer().ID != "chessbot" {
-				if time.Since(gm.LastMoveTime()) > time.Minute*3 {
+				if time.Since(gm.LastMoveTime()) > 3*time.Minute {
 					log.Println("nobody made a move :( removing the current game from pool")
 					s.GameStorage.RemoveGame()
 					return

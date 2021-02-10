@@ -1,9 +1,9 @@
 package main
 
 import (
-	"chess-slack/game"
-	"chess-slack/handler"
-	"chess-slack/rendering"
+	"collab-chess/game"
+	"collab-chess/handler"
+	"collab-chess/rendering"
 	"fmt"
 	"log"
 	"net/http"

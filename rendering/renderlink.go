@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"chess-slack/game"
+	"collab-chess/game"
 
 	"github.com/notnil/chess"
 )
