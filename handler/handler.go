@@ -110,13 +110,20 @@ func (s SlackHandler) GameLoop() {
 			}
 
 			if outcome := gm.Outcome(); outcome != chess.NoOutcome {
-				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText(gm.ResultText(), false))
+
+				link, _ := s.LinkRenderer.CreateLink(gm)
+
+				boardAttachment := slack.Attachment{
+					ImageURL: link.String(),
+					Color:    colorToHex[gm.Turn()],
+				}
+
+				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText(gm.ResultText(), false), slack.MsgOptionAttachments(boardAttachment))
 				s.GameStorage.RemoveGame()
 				return
 			}
 
 			if gm.TurnPlayer().ID == "chessbot" {
-				time.Sleep(time.Second * 2)
 				gm.Lock()
 				cmdPos := uci.CmdPosition{Position: gm.Position()}
 				cmdGo := uci.CmdGo{MoveTime: time.Second / 10}
@@ -127,6 +134,10 @@ func (s SlackHandler) GameLoop() {
 				gm.Unlock()
 				if err := gm.BotMove(move); err != nil {
 					panic(err)
+				}
+
+				if outcome := gm.Outcome(); outcome != chess.NoOutcome {
+					continue
 				}
 
 				link, _ := s.LinkRenderer.CreateLink(gm)

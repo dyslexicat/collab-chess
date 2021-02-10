@@ -4,6 +4,7 @@ import (
 	"collab-chess/game"
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/nlopes/slack/slackevents"
 )
 
-// Msg parses a slack message and handles what to do with it
+// Msg interface includes methods about important info for a slack message and handles what to do with it
 type Msg interface {
 	ChannelID() string
 	Timestamp() string
@@ -21,7 +22,7 @@ type Msg interface {
 	Handle(s *SlackHandler)
 }
 
-// GameStartMsg starts the game
+// GameStartMsg is a struct for a message to start a new game
 type GameStartMsg struct {
 	player string
 	raw    *slackevents.MessageEvent
@@ -61,6 +62,20 @@ func ParseGameStartMsg(m *slackevents.MessageEvent) (*GameStartMsg, bool) {
 	return nil, false
 }
 
+// generates a random integer between min and max
+func randomInt(min, max int) int {
+	return min + rand.Intn(max-min)
+}
+
+// Generate a random string of A-Z chars with len = l
+func randomString(len int) string {
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		bytes[i] = byte(randomInt(97, 122))
+	}
+	return string(bytes)
+}
+
 func (msg GameStartMsg) Handle(s *SlackHandler) {
 	log.Println(msg.player, "is starting a chess game")
 
@@ -75,7 +90,9 @@ func (msg GameStartMsg) Handle(s *SlackHandler) {
 		{ID: msg.player},
 	}
 
-	gm := game.NewGame("1234", players...)
+	gameID := randomString(20)
+
+	gm := game.NewGame(gameID, players...)
 	s.GameStorage.StoreGame(gm)
 
 	go s.GameLoop()
