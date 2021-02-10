@@ -41,7 +41,7 @@ type Game struct {
 	lastMoved    time.Time
 	checkedTile  *chess.Square
 	timeProvider TimeProvider
-	mu           sync.Mutex
+	sync.Mutex
 }
 
 // Player represents a human Chess player
@@ -194,8 +194,6 @@ func (g *Game) Votes() map[string]string {
 
 // Vote votes on a move if it is a valid move
 func (g *Game) Vote(playerID string, move string) error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
 	// this returns an error if it is not a valid move
 	_, err := chess.AlgebraicNotation{}.Decode(g.game.Position(), move)
 
@@ -205,7 +203,7 @@ func (g *Game) Vote(playerID string, move string) error {
 
 	_, ok := g.votes[playerID]
 	if !ok {
-		log.Println(playerID, " is making a move.")
+		log.Println(playerID, "is making a move:", move)
 		g.votes[playerID] = move
 	}
 
@@ -214,8 +212,6 @@ func (g *Game) Vote(playerID string, move string) error {
 
 // MoveTopVote moves the top voted piece
 func (g *Game) MoveTopVote() (*chess.Move, error) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
 	freqs := make(map[string]int)
 	for _, move := range g.votes {
 		freqs[move]++

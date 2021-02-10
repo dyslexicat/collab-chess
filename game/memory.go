@@ -18,7 +18,6 @@ func (m *MemoryStore) RetrieveGame() (*Game, error) {
 	if m.game == nil {
 		return nil, fmt.Errorf("There is no game at the moment")
 	}
-
 	return m.game, nil
 }
 

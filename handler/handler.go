@@ -77,6 +77,11 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("hello", false))
 		case *slackevents.MessageEvent:
 			if ev.Text == "!exit" {
+				_, err := s.GameStorage.RetrieveGame()
+				if err != nil {
+					return
+				}
+
 				s.GameStorage.RemoveGame()
 				return
 			}
@@ -108,58 +113,58 @@ func (s SlackHandler) GameLoop() {
 	}
 
 	for {
-		gm, err := s.GameStorage.RetrieveGame()
+		time.Sleep(time.Second)
+		func() {
+			fmt.Println("a second passed inside game loop")
+			gm, err := s.GameStorage.RetrieveGame()
 
-		if err != nil {
-			return
-		}
-
-		if outcome := gm.Outcome(); outcome != chess.NoOutcome {
-			s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText(gm.ResultText(), false))
-			s.GameStorage.RemoveGame()
-			return
-		}
-
-		if gm.TurnPlayer().ID == "bot" {
-			time.Sleep(time.Second * 2)
-			cmdPos := uci.CmdPosition{Position: gm.Position()}
-			cmdGo := uci.CmdGo{MoveTime: time.Second / 100}
-			if err := eng.Run(cmdPos, cmdGo); err != nil {
-				panic(err)
-			}
-			move := eng.SearchResults().BestMove
-			if err := gm.BotMove(move); err != nil {
-				panic(err)
+			if err != nil {
+				return
 			}
 
-			link, _ := s.LinkRenderer.CreateLink(gm)
-
-			boardAttachment := slack.Attachment{
-				ImageURL: link.String(),
-				Color:    colorToHex[gm.Turn()],
-			}
-
-			s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("bot played", false), slack.MsgOptionAttachments(boardAttachment))
-			fmt.Println(gm)
-		}
-
-		if gm.TurnPlayer().ID != "bot" {
-			if time.Since(gm.LastMoveTime()) > 30*time.Second {
-				fmt.Println("removing the current game from pool")
+			if outcome := gm.Outcome(); outcome != chess.NoOutcome {
+				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText(gm.ResultText(), false))
 				s.GameStorage.RemoveGame()
-				g, _ := s.GameStorage.RetrieveGame()
-				fmt.Println(g)
+				return
 			}
 
-			if time.Since(gm.LastMoveTime()) > 20*time.Second {
-				_, err := gm.MoveTopVote()
-				if err != nil {
-					continue
+			if gm.TurnPlayer().ID == "bot" {
+				time.Sleep(time.Second * 2)
+				cmdPos := uci.CmdPosition{Position: gm.Position()}
+				cmdGo := uci.CmdGo{MoveTime: time.Second / 100}
+				if err := eng.Run(cmdPos, cmdGo); err != nil {
+					panic(err)
+				}
+				move := eng.SearchResults().BestMove
+				if err := gm.BotMove(move); err != nil {
+					panic(err)
 				}
 
-				//api.PostMessage("C01GNJRCQLD", slack.MsgOptionText(, false))
-				fmt.Println(gm)
+				link, _ := s.LinkRenderer.CreateLink(gm)
+
+				boardAttachment := slack.Attachment{
+					ImageURL: link.String(),
+					Color:    colorToHex[gm.Turn()],
+				}
+
+				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("bot played", false), slack.MsgOptionAttachments(boardAttachment))
 			}
-		}
+
+			if gm.TurnPlayer().ID != "bot" {
+				if time.Since(gm.LastMoveTime()) > 30*time.Second {
+					fmt.Println("removing the current game from pool")
+					s.GameStorage.RemoveGame()
+					return
+				}
+
+				if time.Since(gm.LastMoveTime()) > 20*time.Second {
+					move, err := gm.MoveTopVote()
+					if err != nil {
+						return
+					}
+					fmt.Println(move)
+				}
+			}
+		}()
 	}
 }
