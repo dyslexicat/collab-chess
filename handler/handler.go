@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -132,7 +133,7 @@ func (s SlackHandler) GameLoop() {
 				time.Sleep(time.Second * 2)
 				gm.Lock()
 				cmdPos := uci.CmdPosition{Position: gm.Position()}
-				cmdGo := uci.CmdGo{MoveTime: time.Second / 100}
+				cmdGo := uci.CmdGo{MoveTime: time.Second / 10}
 				if err := eng.Run(cmdPos, cmdGo); err != nil {
 					panic(err)
 				}
@@ -153,8 +154,8 @@ func (s SlackHandler) GameLoop() {
 			}
 
 			if gm.TurnPlayer().ID != "bot" {
-				if time.Since(gm.LastMoveTime()) > 30*time.Second {
-					fmt.Println("removing the current game from pool")
+				if time.Since(gm.LastMoveTime()) > time.Minute*2 {
+					log.Println("nobody made a move :( removing the current game from pool")
 					s.GameStorage.RemoveGame()
 					return
 				}

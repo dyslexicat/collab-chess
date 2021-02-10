@@ -134,11 +134,12 @@ func (msg MoveMsg) Handle(s *SlackHandler) {
 	gm, err := s.GameStorage.RetrieveGame()
 
 	if err != nil {
+		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There isn't an active game at the moment :(. You can use the '!start' command to start a new game :chess_pawn: ", false))
 		return
 	}
 
+	// if our mutex locks are properly working this should be redundant
 	if gm.TurnPlayer().ID == "bot" {
-		log.Println("it is the bot's turn")
 		return
 	}
 
