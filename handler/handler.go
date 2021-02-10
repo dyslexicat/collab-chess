@@ -130,12 +130,14 @@ func (s SlackHandler) GameLoop() {
 
 			if gm.TurnPlayer().ID == "bot" {
 				time.Sleep(time.Second * 2)
+				gm.Lock()
 				cmdPos := uci.CmdPosition{Position: gm.Position()}
 				cmdGo := uci.CmdGo{MoveTime: time.Second / 100}
 				if err := eng.Run(cmdPos, cmdGo); err != nil {
 					panic(err)
 				}
 				move := eng.SearchResults().BestMove
+				gm.Unlock()
 				if err := gm.BotMove(move); err != nil {
 					panic(err)
 				}
@@ -160,7 +162,7 @@ func (s SlackHandler) GameLoop() {
 				if time.Since(gm.LastMoveTime()) > 20*time.Second {
 					move, err := gm.MoveTopVote()
 					if err != nil {
-						return
+						continue
 					}
 					fmt.Println(move)
 				}

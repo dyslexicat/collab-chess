@@ -122,6 +122,8 @@ func (g *Game) Move(san string) (*chess.Move, error) {
 
 // BotMove simulates a move for our bot player
 func (g *Game) BotMove(m *chess.Move) error {
+	g.Lock()
+	defer g.Unlock()
 	err := g.game.Move(m)
 	g.started = true
 	g.lastMoved = g.timeProvider()
@@ -194,6 +196,8 @@ func (g *Game) Votes() map[string]string {
 
 // Vote votes on a move if it is a valid move
 func (g *Game) Vote(playerID string, move string) error {
+	g.Lock()
+	defer g.Unlock()
 	// this returns an error if it is not a valid move
 	_, err := chess.AlgebraicNotation{}.Decode(g.game.Position(), move)
 
@@ -212,6 +216,9 @@ func (g *Game) Vote(playerID string, move string) error {
 
 // MoveTopVote moves the top voted piece
 func (g *Game) MoveTopVote() (*chess.Move, error) {
+	g.Lock()
+	defer g.Unlock()
+
 	freqs := make(map[string]int)
 	for _, move := range g.votes {
 		freqs[move]++

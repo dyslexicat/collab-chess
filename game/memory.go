@@ -18,6 +18,10 @@ func (m *MemoryStore) RetrieveGame() (*Game, error) {
 	if m.game == nil {
 		return nil, fmt.Errorf("There is no game at the moment")
 	}
+
+	m.game.Lock()
+	defer m.game.Unlock()
+
 	return m.game, nil
 }
 
@@ -29,6 +33,8 @@ func (m *MemoryStore) StoreGame(game *Game) error {
 
 // RemoveGame deletes the active game
 func (m *MemoryStore) RemoveGame() error {
+	m.game.Lock()
+	defer m.game.Unlock()
 	m.game = nil
 	return nil
 }
