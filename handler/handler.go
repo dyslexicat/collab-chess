@@ -4,7 +4,6 @@ import (
 	"chess-slack/game"
 	"chess-slack/rendering"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -74,27 +73,14 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		innerEvent := eventsAPIEvent.InnerEvent
 		switch ev := innerEvent.Data.(type) {
 		case *slackevents.AppMentionEvent:
-			fmt.Println("mention event: ", ev)
-			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("hello", false))
+			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("Hi! I live in #playchess at Hack Club. You can type !start to start a game of chess, !move [notation] (for example, !move e4 or !move Nc6) to vote on a move. Each turn top voted move gets played. Good luck! :chess_pawn:", false))
 		case *slackevents.MessageEvent:
-			if ev.Text == "!exit" {
-				_, err := s.GameStorage.RetrieveGame()
-				if err != nil {
-					return
-				}
-
-				s.GameStorage.RemoveGame()
-				return
-			}
-
 			msg := parseMessage(ev)
 			if msg == nil {
 				return
 			}
 
 			msg.Handle(&s)
-
-			//fmt.Println("message event", ev)
 		}
 	}
 }
@@ -150,7 +136,7 @@ func (s SlackHandler) GameLoop() {
 					Color:    colorToHex[gm.Turn()],
 				}
 
-				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("bot played", false), slack.MsgOptionAttachments(boardAttachment))
+				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("I made my move :crossed_swords:", false), slack.MsgOptionAttachments(boardAttachment))
 			}
 
 			if gm.TurnPlayer().ID != "bot" {
@@ -161,11 +147,10 @@ func (s SlackHandler) GameLoop() {
 				}
 
 				if time.Since(gm.LastMoveTime()) > 20*time.Second {
-					move, err := gm.MoveTopVote()
+					_, err := gm.MoveTopVote()
 					if err != nil {
 						continue
 					}
-					fmt.Println(move)
 				}
 			}
 		}

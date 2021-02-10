@@ -66,7 +66,7 @@ func (msg GameStartMsg) Handle(s *SlackHandler) {
 
 	_, err := s.GameStorage.RetrieveGame()
 	if err == nil {
-		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There is already a game in place", false))
+		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There is already a game in place. Make your move!", false))
 		return
 	}
 
@@ -134,7 +134,7 @@ func (msg MoveMsg) Handle(s *SlackHandler) {
 	gm, err := s.GameStorage.RetrieveGame()
 
 	if err != nil {
-		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There isn't an active game at the moment :(. You can use the '!start' command to start a new game :chess_pawn: ", false))
+		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There isn't an active game at the moment :( You can use the *!start* command to start a new game :chess_pawn: ", false))
 		return
 	}
 
