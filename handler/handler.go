@@ -73,7 +73,7 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		innerEvent := eventsAPIEvent.InnerEvent
 		switch ev := innerEvent.Data.(type) {
 		case *slackevents.AppMentionEvent:
-			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("Hi! I live in #playchess at Hack Club. You can type !start to start a game of chess, !move [notation] (for example, !move e4 or !move Nc6) to vote on a move. Each turn top voted move gets played. Good luck! :chess_pawn:", false))
+			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("Hi! I live in #playchess at Hack Club. You can type !start to start a game of chess, !move [notation] (for example, !move e4 or !move Nc6) to vote on a move. Each turn top voted move gets played. If no votes are present after 3 mins, current game stops. Good luck! :chess_pawn:", false))
 		case *slackevents.MessageEvent:
 			msg := parseMessage(ev)
 			if msg == nil {
@@ -140,13 +140,13 @@ func (s SlackHandler) GameLoop() {
 			}
 
 			if gm.TurnPlayer().ID != "chessbot" {
-				if time.Since(gm.LastMoveTime()) > time.Minute*2 {
+				if time.Since(gm.LastMoveTime()) > time.Minute*3 {
 					log.Println("nobody made a move :( removing the current game from pool")
 					s.GameStorage.RemoveGame()
 					return
 				}
 
-				if time.Since(gm.LastMoveTime()) > 20*time.Second {
+				if time.Since(gm.LastMoveTime()) > 2*time.Minute {
 					_, err := gm.MoveTopVote()
 					if err != nil {
 						continue
