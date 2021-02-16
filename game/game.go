@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/notnil/chess"
 )
+
+// uniqueVoters is a slice that holds players who voted during a game
+type uniqueVoters []string
 
 // Color represents the piece colors
 type Color string
@@ -38,6 +42,7 @@ type Game struct {
 	started      bool
 	Players      map[Color]Player
 	votes        map[string]string
+	playersVoted uniqueVoters
 	lastMoved    time.Time
 	checkedTile  *chess.Square
 	timeProvider TimeProvider
@@ -57,6 +62,7 @@ func NewGame(ID string, players ...Player) *Game {
 		game:         chess.NewGame(),
 		lastMoved:    time.Now(),
 		votes:        make(map[string]string),
+		playersVoted: uniqueVoters{},
 		timeProvider: defaultTimeProvider,
 	}
 	attachPlayers(gm, players...)
@@ -147,7 +153,14 @@ func (g *Game) ResultText() string {
 	} else {
 		winningPlayer = g.Players[Black]
 	}
-	return fmt.Sprintf("Congratulations, <@%v>! %s by %s", winningPlayer.ID, g.Outcome(), g.game.Method())
+
+	if winningPlayer.ID != "chessbot" {
+		uniquePlayers := g.playersVoted
+		return fmt.Sprintf("%s %s by %s", uniquePlayers, g.Outcome(), g.game.Method())
+	} else {
+		return fmt.Sprintf("I won this time :chess_pawn: Better luck next time! %s by %s", g.Outcome(), g.game.Method())
+	}
+
 }
 
 // LastMove returns the last move done of the game
@@ -211,6 +224,14 @@ func (g *Game) Vote(playerID string, move string) error {
 		g.votes[playerID] = move
 	}
 
+	username := fmt.Sprintf("<@%s>", playerID)
+	for _, val := range g.playersVoted {
+		if username == val {
+			return nil
+		}
+	}
+
+	g.playersVoted = append(g.playersVoted, username)
 	return nil
 }
 
@@ -259,4 +280,15 @@ func (g *Game) CheckedKing() chess.Square {
 		}
 	}
 	return chess.NoSquare
+}
+
+// Stringer for uniqueVoters
+func (uv uniqueVoters) String() string {
+	players := strings.Join(uv, ", ")
+	switch len(uv) {
+	case 1:
+		return fmt.Sprintf("Well played! %s. You defeated the bot!", players)
+	default:
+		return fmt.Sprintf("Good job everyone! %s defeated the bot together!", players)
+	}
 }

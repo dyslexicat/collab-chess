@@ -22,6 +22,7 @@ type SlackHandler struct {
 	SlackClient  *slack.Client
 	GameStorage  game.ChessStorage
 	LinkRenderer rendering.RenderLink
+	GameChannel  string
 }
 
 var colorToHex = map[game.Color]string{
@@ -118,7 +119,7 @@ func (s SlackHandler) GameLoop() {
 					Color:    colorToHex[gm.Turn()],
 				}
 
-				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText(gm.ResultText(), false), slack.MsgOptionAttachments(boardAttachment))
+				s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText(gm.ResultText(), false), slack.MsgOptionAttachments(boardAttachment))
 				s.GameStorage.RemoveGame()
 				return
 			}
@@ -147,7 +148,7 @@ func (s SlackHandler) GameLoop() {
 					Color:    colorToHex[gm.Turn()],
 				}
 
-				s.SlackClient.PostMessage("C01GNJRCQLD", slack.MsgOptionText("I made my move :crossed_swords:", false), slack.MsgOptionAttachments(boardAttachment))
+				s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText("I made my move :crossed_swords:", false), slack.MsgOptionAttachments(boardAttachment))
 			}
 
 			if gm.TurnPlayer().ID != "chessbot" {
@@ -157,7 +158,7 @@ func (s SlackHandler) GameLoop() {
 					return
 				}
 
-				if time.Since(gm.LastMoveTime()) > 2*time.Minute {
+				if time.Since(gm.LastMoveTime()) > 1*time.Minute {
 					_, err := gm.MoveTopVote()
 					if err != nil {
 						continue

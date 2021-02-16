@@ -22,6 +22,7 @@ func main() {
 	slackAuthToken := os.Getenv("SLACK_BOT_TOKEN")
 	signingSecret := os.Getenv("SLACK_SIGNING_SECRET")
 	hostname := os.Getenv("HOSTNAME")
+	channelID := os.Getenv("CHANNEL_ID")
 
 	var gameStorage game.ChessStorage
 
@@ -35,6 +36,7 @@ func main() {
 		BotToken:     slackAuthToken,
 		GameStorage:  gameStorage,
 		LinkRenderer: renderLink,
+		GameChannel:  channelID,
 	}
 
 	http.Handle("/slack/events", sHandler)
