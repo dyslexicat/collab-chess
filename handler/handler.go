@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -127,7 +128,12 @@ func (s SlackHandler) GameLoop() {
 			if gm.TurnPlayer().ID == "chessbot" {
 				gm.Lock()
 				cmdPos := uci.CmdPosition{Position: gm.Position()}
-				cmdGo := uci.CmdGo{MoveTime: time.Second / 10}
+
+				// thinkingTime is a value between 10 and 60
+				// to simulate the thinking time of our bot so that we get different moves
+				thinkingTime := time.Duration(rand.Intn(51) + 10)
+
+				cmdGo := uci.CmdGo{MoveTime: 2 * time.Second / thinkingTime}
 				if err := eng.Run(cmdPos, cmdGo); err != nil {
 					panic(err)
 				}

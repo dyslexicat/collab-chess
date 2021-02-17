@@ -6,8 +6,10 @@ import (
 	"collab-chess/rendering"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -17,6 +19,8 @@ func main() {
 	if err != nil {
 		log.Fatal("error loading .env files")
 	}
+
+	rand.Seed(time.Now().UnixNano())
 
 	// slack api bot token (xobx...)
 	slackAuthToken := os.Getenv("SLACK_BOT_TOKEN")

@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackevents"
@@ -78,7 +77,6 @@ func randomString(len int) string {
 }
 
 func (msg GameStartMsg) Handle(s *SlackHandler) {
-	rand.Seed(time.Now().UnixNano())
 	log.Println(msg.player, "is starting a chess game")
 
 	_, err := s.GameStorage.RetrieveGame()
