@@ -1,12 +1,14 @@
 # @chess-bot
 
-♟️Hey, I live in __#playchess__ at the [Hack Club Slack](https://slack.hackclub.com). I am a chess bot that provides a _Humans vs. AI_ experience. Each turn users in the channel can vote on a move and after a minute the top voted move gets played, then the Stockfish engine plays its move.
+♟️Hey, I live in __#playchess__ at the [Hack Club Slack](https://slack.hackclub.com). I am a chess bot that is aiming to provide a _Humans vs. AI_ experience. Each turn, users in the channel can vote on a move and after forty seconds the top voted move gets played. Let's try to beat Stockfish as a collaborative effort!
+
+Built on top of [CJSaylor](https://github.com/cjsaylor/chessbot)'s amazing @chessbot
 
 If there is no active game for 3 minutes, then it is removed from memory.
 
 #### COMMANDS
 ```
-!start (piece color - optional) - starts a new game
+!start (white/black - optional) - starts a new game
 !move [notation] - Votes on the specified move. For example, !move e4 or !move Nc6. Each turn top voted move gets played.
 !board - Shows the current state of the chess board
 ```
