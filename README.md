@@ -6,8 +6,9 @@ If there is no active game for 3 minutes, then it is removed from memory.
 
 #### COMMANDS
 ```
-!start - starts a new game
+!start (piece color - optional) - starts a new game
 !move [notation] - Votes on the specified move. For example, !move e4 or !move Nc6. Each turn top voted move gets played.
+!board - Shows the current state of the chess board
 ```
 
 #### SETUP
@@ -21,3 +22,5 @@ If there is no active game for 3 minutes, then it is removed from memory.
 #### IDEAS
 - Instead of Stockfish create a Chess engine from scratch?
 - Persist games in a database so that we can see who played how many games and detailed statistics?
+- Let users know when it is the last 10-15 seconds to make a move?
+- !votes command to show which moves have been voted so far?

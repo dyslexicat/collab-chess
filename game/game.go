@@ -56,7 +56,7 @@ type Player struct {
 }
 
 // NewGame creates and returns a new game
-func NewGame(ID string, players ...Player) *Game {
+func NewGame(ID string, pieceColor string, players ...Player) *Game {
 	gm := &Game{
 		ID:           ID,
 		game:         chess.NewGame(),
@@ -65,21 +65,42 @@ func NewGame(ID string, players ...Player) *Game {
 		playersVoted: uniqueVoters{},
 		timeProvider: defaultTimeProvider,
 	}
-	attachPlayers(gm, players...)
+
+	attachPlayers(gm, pieceColor, players...)
+
 	return gm
 }
 
-func attachPlayers(g *Game, players ...Player) {
+func attachPlayers(g *Game, pieceColor string, players ...Player) {
 	playerList := []Player{}
 	playerList = append(playerList, players...)
-	rand.Shuffle(2, func(i, j int) {
-		playerList[i], playerList[j] = playerList[j], playerList[i]
-	})
-	playerList[0].color = White
-	playerList[1].color = Black
-	g.Players = map[Color]Player{
-		White: playerList[0],
-		Black: playerList[1],
+
+	if pieceColor == "" {
+		rand.Shuffle(2, func(i, j int) {
+			playerList[i], playerList[j] = playerList[j], playerList[i]
+		})
+		playerList[0].color = White
+		playerList[1].color = Black
+		g.Players = map[Color]Player{
+			White: playerList[0],
+			Black: playerList[1],
+		}
+	} else if pieceColor == "white" {
+		playerList[0].color = Black
+		playerList[1].color = White
+
+		g.Players = map[Color]Player{
+			White: playerList[1],
+			Black: playerList[0],
+		}
+	} else if pieceColor == "black" {
+		playerList[0].color = White
+		playerList[1].color = Black
+
+		g.Players = map[Color]Player{
+			White: playerList[0],
+			Black: playerList[1],
+		}
 	}
 }
 
@@ -157,9 +178,9 @@ func (g *Game) ResultText() string {
 	if winningPlayer.ID != "chessbot" {
 		uniquePlayers := g.playersVoted
 		return fmt.Sprintf("%s %s by %s", uniquePlayers, g.Outcome(), g.game.Method())
-	} else {
-		return fmt.Sprintf("I won this time :chess_pawn: Better luck next time! %s by %s", g.Outcome(), g.game.Method())
 	}
+
+	return fmt.Sprintf("I won this time :chess_pawn: Better luck next time! %s by %s", g.Outcome(), g.game.Method())
 
 }
 

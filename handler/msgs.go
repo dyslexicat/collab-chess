@@ -24,8 +24,9 @@ type Msg interface {
 
 // GameStartMsg is a struct for a message to start a new game
 type GameStartMsg struct {
-	player string
-	raw    *slackevents.MessageEvent
+	player     string
+	pieceColor string
+	raw        *slackevents.MessageEvent
 }
 
 func (m GameStartMsg) ChannelID() string {
@@ -56,10 +57,24 @@ func ParseGameStartMsg(m *slackevents.MessageEvent) (*GameStartMsg, bool) {
 	}
 
 	if m.Text == "!start" {
-		return &GameStartMsg{raw: m, player: m.User}, true
+		return &GameStartMsg{raw: m, player: m.User, pieceColor: ""}, true
 	}
 
-	return nil, false
+	regex := regexp.MustCompile("^!start (.*)$")
+	matches := regex.FindStringSubmatch(m.Text)
+
+	if matches == nil {
+		return nil, false
+	}
+
+	switch matches[1] {
+	case "white":
+		return &GameStartMsg{raw: m, player: m.User, pieceColor: "white"}, true
+	case "black":
+		return &GameStartMsg{raw: m, player: m.User, pieceColor: "black"}, true
+	default:
+		return nil, false
+	}
 }
 
 // generates a random integer between min and max
@@ -77,14 +92,15 @@ func randomString(len int) string {
 }
 
 func (msg GameStartMsg) Handle(s *SlackHandler) {
-	log.Println(msg.player, "is starting a chess game")
-
 	_, err := s.GameStorage.RetrieveGame()
 	if err == nil {
-		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There is already a game in place. Make your move!", false))
+		s.SlackClient.PostMessage(msg.ChannelID(), slack.MsgOptionText("There is already a game in place. Type *!board* to see the state of the board. Vote on a move!", false))
 		return
 	}
 
+	log.Println(msg.player, "is starting a chess game")
+
+	// first element is the bot and the second one is the human players
 	players := []game.Player{
 		{ID: "chessbot"},
 		{ID: msg.player},
@@ -92,7 +108,7 @@ func (msg GameStartMsg) Handle(s *SlackHandler) {
 
 	gameID := randomString(20)
 
-	gm := game.NewGame(gameID, players...)
+	gm := game.NewGame(gameID, msg.pieceColor, players...)
 	s.GameStorage.StoreGame(gm)
 
 	go s.GameLoop()
