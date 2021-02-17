@@ -168,6 +168,65 @@ func (msg MoveMsg) Handle(s *SlackHandler) {
 	}
 }
 
+// BoardMsg represents a message to ask the current board state
+type BoardMsg struct {
+	player string
+	raw    *slackevents.MessageEvent
+}
+
+func (m BoardMsg) ChannelID() string {
+	return m.raw.Channel
+}
+
+func (m BoardMsg) Timestamp() string {
+	return m.raw.TimeStamp
+}
+
+func (m BoardMsg) ThreadTimestamp() string {
+	return m.raw.ThreadTimeStamp
+}
+
+func (m BoardMsg) Raw() *slackevents.MessageEvent {
+	return m.raw
+}
+
+func ParseBoardMsg(m *slackevents.MessageEvent) (*BoardMsg, bool) {
+	// cannot be in a thread
+	if m.ThreadTimeStamp != "" {
+		return nil, false
+	}
+
+	// it is in a DM
+	if strings.HasPrefix(m.Channel, "D") {
+		return nil, false
+	}
+
+	if m.Text == "!board" {
+		return &BoardMsg{raw: m, player: m.User}, true
+	}
+
+	return nil, false
+}
+
+func (m BoardMsg) Handle(s *SlackHandler) {
+	gm, err := s.GameStorage.RetrieveGame()
+
+	if err != nil {
+		return
+	}
+
+	gm.Lock()
+	defer gm.Unlock()
+	link, _ := s.LinkRenderer.CreateLink(gm)
+
+	boardAttachment := slack.Attachment{
+		ImageURL: link.String(),
+		Color:    colorToHex[gm.Turn()],
+	}
+
+	s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText("Here is the current state of the game", false), slack.MsgOptionAttachments(boardAttachment))
+}
+
 // This parses messages to either a msg to start the game or to play a move
 func parseMessage(msg *slackevents.MessageEvent) Msg {
 	var parsed Msg
@@ -179,6 +238,11 @@ func parseMessage(msg *slackevents.MessageEvent) Msg {
 	}
 
 	parsed, ok = ParseMoveMsg(msg)
+	if ok {
+		return parsed
+	}
+
+	parsed, ok = ParseBoardMsg(msg)
 	if ok {
 		return parsed
 	}

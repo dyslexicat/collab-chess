@@ -112,7 +112,6 @@ func (s SlackHandler) GameLoop() {
 			}
 
 			if outcome := gm.Outcome(); outcome != chess.NoOutcome {
-
 				link, _ := s.LinkRenderer.CreateLink(gm)
 
 				boardAttachment := slack.Attachment{
@@ -164,7 +163,7 @@ func (s SlackHandler) GameLoop() {
 					return
 				}
 
-				if time.Since(gm.LastMoveTime()) > 1*time.Minute {
+				if time.Since(gm.LastMoveTime()) > 40*time.Second {
 					_, err := gm.MoveTopVote()
 					if err != nil {
 						continue
