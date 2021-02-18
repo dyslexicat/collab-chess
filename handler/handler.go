@@ -1,14 +1,15 @@
 package handler
 
 import (
-	"collab-chess/game"
-	"collab-chess/rendering"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/dyslexicat/collab-chess/game"
+	"github.com/dyslexicat/collab-chess/rendering"
 
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackevents"

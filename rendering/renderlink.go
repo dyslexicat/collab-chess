@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"collab-chess/game"
+	"github.com/dyslexicat/collab-chess/game"
 
 	"github.com/notnil/chess"
 )

@@ -1,12 +1,13 @@
 package handler
 
 import (
-	"collab-chess/game"
 	"fmt"
 	"log"
 	"math/rand"
 	"regexp"
 	"strings"
+
+	"github.com/dyslexicat/collab-chess/game"
 
 	"github.com/nlopes/slack"
 	"github.com/nlopes/slack/slackevents"

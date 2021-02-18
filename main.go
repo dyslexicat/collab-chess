@@ -1,15 +1,16 @@
 package main
 
 import (
-	"collab-chess/game"
-	"collab-chess/handler"
-	"collab-chess/rendering"
 	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/dyslexicat/collab-chess/game"
+	"github.com/dyslexicat/collab-chess/handler"
+	"github.com/dyslexicat/collab-chess/rendering"
 
 	"github.com/joho/godotenv"
 )
