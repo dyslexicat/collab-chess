@@ -168,7 +168,7 @@ func (s SlackHandler) GameLoop() {
 					return
 				}
 
-				if time.Since(gm.LastMoveTime()) > 40*time.Second {
+				if time.Since(gm.FirstVoteTime()) > 40*time.Second {
 					topVotedMove, err := gm.MoveTopVote()
 					if err != nil {
 						continue

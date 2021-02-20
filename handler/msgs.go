@@ -285,7 +285,7 @@ func ParseHelpMsg(m *slackevents.MessageEvent) (*HelpMsg, bool) {
 }
 
 func (m HelpMsg) Handle(s *SlackHandler) {
-	helpText := "K: King, Q: Queen, R: Rook, B: Bishop, N: Knight, Pawn: no shorthand needed.\nTo vote on a move type '!move [notation]'. You don't have to specify which square a piece is on as long as it is not a capture.\n**'!move e4'** will move the pawn to e4. **'!move Nc6'** will move the Knight to c6. To castle use !move O-O or O-O-O\nYou can capture other pieces with !move dxe4 which indicates the d pawn will capture the piece on e4. Nxc3 means that you want your knight to capture on c3.\nFinally, you can promote with the equal sign !move e8=Q will move your pawn to e8 and promote to a queen."
+	helpText := "K: King, Q: Queen, R: Rook, B: Bishop, N: Knight, Pawn: no shorthand needed.\nTo vote on a move type '!move [notation]'. You don't have to specify which square a piece is on as long as it is not a capture or **two pieces can move to the same square**.\n**'!move e4'** will move the pawn to e4. **'!move Nc6'** will move the Knight to c6. To castle use !move O-O or O-O-O\nYou can capture other pieces with !move dxe4 which indicates the d pawn will capture the piece on e4. Nxc3 means that you want your knight to capture on c3.\nFinally, you can promote with the equal sign !move e8=Q will move your pawn to e8 and promote to a queen."
 	s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText(helpText, false))
 }
 

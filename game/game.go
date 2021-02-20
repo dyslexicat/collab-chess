@@ -44,6 +44,7 @@ type Game struct {
 	votes        map[string]string
 	playersVoted uniqueVoters
 	lastMoved    time.Time
+	firstVoted   time.Time
 	checkedTile  *chess.Square
 	timeProvider TimeProvider
 	sync.Mutex
@@ -61,6 +62,7 @@ func NewGame(ID string, pieceColor string, players ...Player) *Game {
 		ID:           ID,
 		game:         chess.NewGame(),
 		lastMoved:    time.Now(),
+		firstVoted:   time.Now(),
 		votes:        make(map[string]string),
 		playersVoted: uniqueVoters{},
 		timeProvider: defaultTimeProvider,
@@ -198,6 +200,11 @@ func (g *Game) LastMoveTime() time.Time {
 	return g.lastMoved
 }
 
+// FirstVoteTime returns the time of the first vote
+func (g *Game) FirstVoteTime() time.Time {
+	return g.firstVoted
+}
+
 // Start indicates the game has been started
 func (g *Game) Start() {
 	g.started = true
@@ -243,6 +250,11 @@ func (g *Game) Vote(playerID string, move string) error {
 	if !ok {
 		log.Println(playerID, "is making a move:", move)
 		g.votes[playerID] = move
+	}
+
+	// if this was the first vote then we update the firstVoted
+	if len(g.votes) == 1 {
+		g.firstVoted = g.timeProvider()
 	}
 
 	username := fmt.Sprintf("<@%s>", playerID)
