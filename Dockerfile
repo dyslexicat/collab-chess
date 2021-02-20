@@ -19,6 +19,9 @@ RUN git clone https://github.com/official-stockfish/Stockfish.git &&\
     make net &&\
     make build ARCH=x86-64-modern
 
+# for some reason stockfish build doesn't move there on its own
+RUN mv ./Stockfish/src/stockfish /usr/local/bin
+
 COPY --from=builder /chessbot/main .
 COPY --from=builder /chessbot/.env .
 COPY --from=builder /chessbot/assets ./assets

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"io/ioutil"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -165,10 +166,13 @@ func (s SlackHandler) GameLoop() {
 				}
 
 				if time.Since(gm.LastMoveTime()) > 40*time.Second {
-					_, err := gm.MoveTopVote()
+					topVotedMove, err := gm.MoveTopVote()
 					if err != nil {
 						continue
 					}
+
+					text := fmt.Sprintf("Top voted move was: *%s*", topVotedMove)
+					s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText(text, false))
 				}
 			}
 		}

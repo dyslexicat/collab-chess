@@ -257,7 +257,7 @@ func (g *Game) Vote(playerID string, move string) error {
 }
 
 // MoveTopVote moves the top voted piece
-func (g *Game) MoveTopVote() (*chess.Move, error) {
+func (g *Game) MoveTopVote() (string, error) {
 	g.Lock()
 	defer g.Unlock()
 
@@ -277,18 +277,18 @@ func (g *Game) MoveTopVote() (*chess.Move, error) {
 	}
 
 	if topVoteCount == 0 {
-		return nil, fmt.Errorf("there was no top vote")
+		return "", fmt.Errorf("there was no top vote")
 	}
 
-	chessMove, err := g.Move(topVote)
+	_, err := g.Move(topVote)
 
 	if err != nil {
-		return nil, fmt.Errorf("there was a problem playing the move %s", topVote)
+		return "", fmt.Errorf("there was a problem playing the move %s", topVote)
 	}
 
 	// reset votes after the voting
 	g.votes = map[string]string{}
-	return chessMove, nil
+	return topVote, nil
 }
 
 // CheckedKing returns the square of a checked king if there is indeed a king in check.
