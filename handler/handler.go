@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -77,7 +77,7 @@ func (s SlackHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		innerEvent := eventsAPIEvent.InnerEvent
 		switch ev := innerEvent.Data.(type) {
 		case *slackevents.AppMentionEvent:
-			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("Hi! I live in #playchess at Hack Club. You can type !start to start a game of chess, !move [notation] (for example, !move e4 or !move Nc6) to vote on a move. Each turn top voted move gets played. If no votes are present after 3 mins, current game stops. Good luck! :chess_pawn:", false))
+			s.SlackClient.PostMessage(ev.Channel, slack.MsgOptionText("Hi! I live in #playchess at Hack Club. !help to get help on how to play. You can type !start to start a game of chess, !move [notation] (for example, !move e4 or !move Nc6) to vote on a move. Each turn top voted move gets played. If no votes are present after 3 mins, current game stops. Good luck! :chess_pawn:", false))
 		case *slackevents.MessageEvent:
 			msg := parseMessage(ev)
 			if msg == nil {
@@ -98,8 +98,11 @@ func (s SlackHandler) GameLoop() {
 	}
 
 	defer eng.Close()
+
+	setOpt := uci.CmdSetOption{Name: "UCI_LimitStrength", Value: "true"}
+
 	// initialize uci with new game
-	if err := eng.Run(uci.CmdUCI, uci.CmdIsReady, uci.CmdUCINewGame); err != nil {
+	if err := eng.Run(uci.CmdUCI, uci.CmdIsReady, setOpt, uci.CmdUCINewGame); err != nil {
 		panic(err)
 	}
 
