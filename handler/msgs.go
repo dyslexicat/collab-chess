@@ -244,10 +244,60 @@ func (m BoardMsg) Handle(s *SlackHandler) {
 	s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText("Here is the current state of the game", false), slack.MsgOptionAttachments(boardAttachment))
 }
 
+// HelpMsg represents a message about the help command
+type HelpMsg struct {
+	player string
+	raw    *slackevents.MessageEvent
+}
+
+func (m HelpMsg) ChannelID() string {
+	return m.raw.Channel
+}
+
+func (m HelpMsg) Timestamp() string {
+	return m.raw.TimeStamp
+}
+
+func (m HelpMsg) ThreadTimestamp() string {
+	return m.raw.ThreadTimeStamp
+}
+
+func (m HelpMsg) Raw() *slackevents.MessageEvent {
+	return m.raw
+}
+
+func ParseHelpMsg(m *slackevents.MessageEvent) (*HelpMsg, bool) {
+	// cannot be in a thread
+	if m.ThreadTimeStamp != "" {
+		return nil, false
+	}
+
+	// it is in a DM
+	if strings.HasPrefix(m.Channel, "D") {
+		return nil, false
+	}
+
+	if m.Text == "!help" {
+		return &HelpMsg{raw: m, player: m.User}, true
+	}
+
+	return nil, false
+}
+
+func (m HelpMsg) Handle(s *SlackHandler) {
+	helpText := "K: King, Q: Queen, R: Rook, B: Bishop, N: Knight, Pawn: no shorthand needed.\nTo vote on a move type '!move [notation]'. You don't have to specify which square a piece is on as long as it is not a capture.\n**'!move e4'** will move the pawn to e4. **'!move Nc6'** will move the Knight to c6. To castle use !move O-O or O-O-O\nYou can capture other pieces with !move dxe4 which indicates the d pawn will capture the piece on e4. Nxc3 means that you want your knight to capture on c3.\nFinally, you can promote with the equal sign !move e8=Q will move your pawn to e8 and promote to a queen."
+	s.SlackClient.PostMessage(s.GameChannel, slack.MsgOptionText(helpText, false))
+}
+
 // This parses messages to either a msg to start the game or to play a move
 func parseMessage(msg *slackevents.MessageEvent) Msg {
 	var parsed Msg
 	var ok bool
+
+	parsed, ok = ParseHelpMsg(msg)
+	if ok {
+		return parsed
+	}
 
 	parsed, ok = ParseGameStartMsg(msg)
 	if ok {
