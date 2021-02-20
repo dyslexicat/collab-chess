@@ -18,7 +18,8 @@ If there is no active game for 3 minutes, then it is removed from memory.
 - Go to "Event Subscriptions", enable events and subscribe to the *message.channels* and *app_mention* events
 - Install the app to your Workspace from the "OAuth & Permissions" page, grab your "Bot User OAuth Access Token" and set it as the SLACK_BOT_TOKEN in your environment
 - Under "Basic Information", grab the Signing Secret and set it as SLACK_SIGNING_SECRET in your environment
-- Set the CHANNEL_ID and HOSTNAME variables in your environment
+- Set the CHANNEL_ID (the channel you want the bot to be active) and APP_HOSTNAME (the public url where you will be listening for slack events) variables in your environment
+- For local development you need to place the relevant stockfish binary in a folder that is in your path
 - If you are developing locally, use ngrok to create a public url and put "{your_ngrok_url}/slack/events" to the "Request URL" under "Event Subscriptions"
 
 #### IDEAS

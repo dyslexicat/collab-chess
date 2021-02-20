@@ -26,7 +26,7 @@ func main() {
 	// slack api bot token (xobx...)
 	slackAuthToken := os.Getenv("SLACK_BOT_TOKEN")
 	signingSecret := os.Getenv("SLACK_SIGNING_SECRET")
-	hostname := os.Getenv("HOSTNAME")
+	hostname := os.Getenv("APP_HOSTNAME")
 	channelID := os.Getenv("CHANNEL_ID")
 
 	var gameStorage game.ChessStorage
